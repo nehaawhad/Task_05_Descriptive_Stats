@@ -134,8 +134,18 @@ Top 5 GB+CT: Vandiver (34+40=74), Benoit (34+12=46), Vogelman (25+13=38), Muchni
   - Because of these two column-substitution errors, the model's "top 5 GB+CT" list excluded the two players (Muchnick, Vogelman) who actually belong there, and included two who don't (Rode, Cotter).
 **Notes:** This is the most significant Phase B finding. Unlike Q3/Q5 in Phase A (right data, wrong final arithmetic step), this error happened upstream — at the point of reading which column meant what — and it silently propagated into a fully wrong conclusion delivered with total confidence ("Final Answer"). A reader without independently computed ground truth would have no way to detect this from the response alone, since the individual player names and some numbers cited (top-5 points list) were completely correct, lending false credibility to the flawed part.
 
-### Judgment Q1 — Follow-up (to try)
-Consider re-asking with an explicit column-mapping instruction, e.g.: "GB is the gb column, CT is the ct column — do not use dc, to, or fouls for this calculation." See if forcing explicit column binding fixes the error, and log whether that's a fix specific to prompt engineering (defining terms) or something format/model-specific.
+### Judgment Q1 — Follow-up (attempted)
+**Prompt:**
+> Redo that same game changer calculation, but be precise about columns: GB means the gb column (ground balls), and CT means the ct column (caused turnovers). Do not use dc (draw controls), to (turnovers), or fouls for this — only gb and ct.
+
+**Response:**
+> Repeated the identical wrong numbers: Rode (75+17=92), Vandiver (34+40=74), Benoit (34+12=46), Cotter (26+10=36), Caramelli (23+11=34) — exact same top-5 GB+CT list as before, same "no overlap" conclusion. Explicitly claimed compliance: "No draw controls, no turnovers, no fouls — just the two columns you specified."
+
+**Ground truth:** Same as before — Rode's real gb=1, ct=0; Cotter's real gb=11, ct=10.
+**Verdict:** Prompt engineering technique FAILED — explicit column-binding instructions had no effect on the actual computation.
+**Notes:** This is a critical finding for the prompt-engineering research question. The model did not silently ignore the instruction — it actively asserted it had followed the new, more precise instruction ("just the two columns you specified") while producing numbers identical to the original error. This suggests the failure isn't at the instruction-following level (ambiguous terms) but at some deeper level — possibly reusing/caching its earlier reasoning rather than re-deriving from the source rows, since a genuine re-read of gb=1, ct=0 for Rode would be very hard to still land on "75+17=92" by accident twice in a row with the same wrong numbers.
+
+**Next technique to try:** Force the model to quote the literal CSV row text for just the two disputed players (Rode, Cotter) before doing any arithmetic — e.g., "First, quote the exact row text for Rode, Meghan and Cotter, Mileena from the CSV. Then, and only then, identify which value is in the gb column and which is in the ct column for each." This tests whether forcing a literal-quote step before computation breaks the apparent "reuse of prior answer" pattern.
 
 ---
 
