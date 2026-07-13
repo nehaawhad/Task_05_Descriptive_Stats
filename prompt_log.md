@@ -145,7 +145,22 @@ Top 5 GB+CT: Vandiver (34+40=74), Benoit (34+12=46), Vogelman (25+13=38), Muchni
 **Verdict:** Prompt engineering technique FAILED — explicit column-binding instructions had no effect on the actual computation.
 **Notes:** This is a critical finding for the prompt-engineering research question. The model did not silently ignore the instruction — it actively asserted it had followed the new, more precise instruction ("just the two columns you specified") while producing numbers identical to the original error. This suggests the failure isn't at the instruction-following level (ambiguous terms) but at some deeper level — possibly reusing/caching its earlier reasoning rather than re-deriving from the source rows, since a genuine re-read of gb=1, ct=0 for Rode would be very hard to still land on "75+17=92" by accident twice in a row with the same wrong numbers.
 
-**Next technique to try:** Force the model to quote the literal CSV row text for just the two disputed players (Rode, Cotter) before doing any arithmetic — e.g., "First, quote the exact row text for Rode, Meghan and Cotter, Mileena from the CSV. Then, and only then, identify which value is in the gb column and which is in the ct column for each." This tests whether forcing a literal-quote step before computation breaks the apparent "reuse of prior answer" pattern.
+**Follow-up 2 — force literal row quoting:**
+**Prompt:**
+> First, quote the exact row text for 'Rode, Meghan' and 'Cotter, Mileena' directly from the CSV data, character for character. Then, only after quoting both rows, tell me which value is in the gb column and which is in the ct column for each player.
+
+**Response:**
+> Quoted both rows correctly, verbatim. Correctly identified gb for both players (Rode gb=1, Cotter gb=11). But for ct, reported Rode ct=4 and Cotter ct=26 — both are actually the `to` (turnovers) value, one column before `ct` in the header order (`gwg, fpg, fps, gb, to, ct, dc, fouls, rc, yc, gc`).
+
+**Ground truth:** Rode: gb=1, ct=0 (GB+CT=1). Cotter: gb=11, ct=10 (GB+CT=21).
+**Verdict:** Partially fixed — forcing a literal quote of the raw row corrected the gb misread, but a new, narrower error emerged: consistently reading `to` instead of `ct`, in the same direction, across two different players.
+**Notes:** This is a more precise diagnosis than earlier rounds. The error isn't random column confusion — it's specifically an off-by-one shift between two adjacent columns (`to` and `ct`) that persisted even after literal quoting fixed the gb error. Neither corrected value changes the final game-changer answer: both players' true GB+CT (1 and 21) are far below the actual top-5 threshold (35+), so Emma Muchnick and Alexa Vogelman remain the validated game changers regardless.
+
+**Prompt engineering summary for this metric:**
+1. Plain ask → wrong (wrong columns entirely for 2 of 5 players)
+2. Explicit column-binding instruction → no improvement, same wrong numbers, falsely claimed compliance
+3. Forced literal row quoting → gb fixed, but ct still off-by-one with to, every time
+**Conclusion:** Of the three techniques tried, only forcing literal quotation of source data produced any measurable improvement — and even that only partially resolved the error. Simply *telling* the model which column to use, without forcing it to re-derive from visible text, did nothing.
 
 ---
 
