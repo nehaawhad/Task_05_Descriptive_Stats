@@ -103,18 +103,39 @@ Yes, when asked directly. But the "code execution" was not real — it generated
 ---
 
 ## Phase B: Derived Metrics, Judgment Questions, and Prompt Engineering
-*(To be completed)*
 
 ### Metric Definitions
 
-- **Most improved player:**
-- **Game changer:**
+- **Game changer:** A player with at least 10 games played who ranks in the team's top 5 in total points (offense) AND top 5 in combined ground balls + caused turnovers (defense/possession). Requires two-way contribution, not just scoring.
+- **Most improved player:** *(not yet defined)*
 
-### Judgment Q1
+### My own ground-truth answer (computed before asking the model)
+Using `players_2025.csv` filtered to gp >= 10:
+
+Top 5 points: Ward (76), Trinkaus (43), Muchnick (41), Britton (30), Vogelman (27)
+Top 5 GB+CT: Vandiver (34+40=74), Benoit (34+12=46), Vogelman (25+13=38), Muchnick (27+9=36), Devito (22+13=35)
+
+**Overlap (game changers): Emma Muchnick and Alexa Vogelman**
+
+---
+
+### Judgment Q1 — Game Changer Metric
 **Prompt:**
+> Using this definition — a game changer is a player with at least 10 games played who ranks in the top 5 on the team in total points AND top 5 in combined ground balls + caused turnovers — which player(s) qualify as game changers this season?
+
 **Response:**
-**Validation:**
-**Verdict:**
+> Walked through top-5 points correctly (Ward, Trinkaus, Muchnick, Britton, Vogelman — all correct). For "top 5 GB+CT," listed: Rode (75+17=92), Vandiver (34+40=74), Benoit (34+12=46), Cotter (26+10=36), Caramelli (23+11=34). Cross-matched the two lists and found no overlap, concluding: "No players qualify as game changers under your definition this season."
+
+**Ground truth:** Emma Muchnick and Alexa Vogelman both qualify (see computed table above).
+**Verdict:** Incorrect — and the final conclusion is the opposite of the true answer (0 qualifiers vs. the actual 2).
+**Root cause identified:** Copilot misread columns for two players when computing GB+CT:
+  - Rode, Meghan — actual row has gb=1, ct=0 (GB+CT = 1). Copilot instead used her dc=75 (draw controls) and fouls=17 columns, producing a fabricated "92."
+  - Cotter, Mileena — actual row has gb=11, ct=10 (GB+CT = 21). Copilot instead used her to=26 (turnovers) column in place of ground balls, producing "36" instead of 21.
+  - Because of these two column-substitution errors, the model's "top 5 GB+CT" list excluded the two players (Muchnick, Vogelman) who actually belong there, and included two who don't (Rode, Cotter).
+**Notes:** This is the most significant Phase B finding. Unlike Q3/Q5 in Phase A (right data, wrong final arithmetic step), this error happened upstream — at the point of reading which column meant what — and it silently propagated into a fully wrong conclusion delivered with total confidence ("Final Answer"). A reader without independently computed ground truth would have no way to detect this from the response alone, since the individual player names and some numbers cited (top-5 points list) were completely correct, lending false credibility to the flawed part.
+
+### Judgment Q1 — Follow-up (to try)
+Consider re-asking with an explicit column-mapping instruction, e.g.: "GB is the gb column, CT is the ct column — do not use dc, to, or fouls for this calculation." See if forcing explicit column binding fixes the error, and log whether that's a fix specific to prompt engineering (defining terms) or something format/model-specific.
 
 ---
 
