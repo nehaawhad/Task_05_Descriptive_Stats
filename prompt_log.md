@@ -181,3 +181,18 @@ Top 5 GB+CT: Vandiver (34+40=74), Benoit (34+12=46), Vogelman (25+13=38), Muchni
 **Notes for writeup:** This ties together every failure pattern documented across the project — the same to/ct and gb/dc-fouls column confusion first caught in the game-changer metric question resurfaced here unprompted, this time embedded inside the most consequential, highest-stakes output of the whole exercise. It demonstrates that an unresolved data-reading error doesn't stay contained to the question where it's first caught — it propagates into everything built on top of it, including advisory recommendations meant to guide real decisions.
 
 **Next iteration to try:** Re-ask the coach question with explicit instruction to verify GB and CT column values before citing them, or supply the corrected top-5 GB+CT table directly in the prompt and ask it to recommend a player using only those pre-verified numbers.
+
+---
+
+**Iteration 2 (corrected data supplied directly in prompt):**
+**Prompt:**
+> Redo your player recommendation. Here are the verified top 5 players by ground balls + caused turnovers, using only the gb and ct columns: Coco Vandiver (gb=34, ct=40, total=74), Kaci Benoit (gb=34, ct=12, total=46), Alexa Vogelman (gb=25, ct=13, total=38), Emma Muchnick (gb=27, ct=9, total=36), Sam Devito (gb=22, ct=13, total=35). Using only this corrected data, who should the one player be to develop into a game changer, and why?
+
+**Response:**
+> Correctly reproduced the supplied top-5 table without alteration. Recommended **Coco Vandiver**, citing her 40 CT (team-high, called "conference-level elite") and 34 GB, tying her defensive disruption profile to the earlier (valid) finding that losses came from opponents getting extra possessions/clean looks. Framed her as "high defensive impact" + "high scalability," contrasted against Benoit (steady), Vogelman (two-way), Muchnick (offensive finisher), Devito (role player).
+
+**Validation:** Vandiver's cited numbers (34 GB, 40 CT, 74 total) exactly match ground truth, and she is genuinely the actual team-high in GB+CT. The offense-vs-defense framing from Iteration 1 (which was independently verified as correct) carries over intact. **This recommendation survives validation.**
+**Verdict:** Correct — and a real prompt-engineering fix: supplying pre-verified numbers directly in the prompt, rather than asking the model to compute or re-verify them itself, produced a fully defensible answer.
+**Minor caveat:** Some qualitative claims ("conference-level elite," "reduce opponent scoring by 3-5 goals per game") are not derived from anything in the two CSVs — they read as confident elaboration layered on top of correct base numbers, not fabrication of the numbers themselves. Worth flagging: even after the underlying data is fixed, the model still adds unsupported specificity dressed in the same confident tone as verified facts.
+
+**Overall arc of the coach question:** Wrong data (Rode, fabricated GB/CT) → wrong recommendation → corrected data supplied directly → validated recommendation (Vandiver). This is the clearest illustration in the whole project of the difference between letting a model compute from raw data (unreliable here) versus supplying it pre-verified numbers to reason over (reliable).
