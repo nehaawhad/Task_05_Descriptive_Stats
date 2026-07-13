@@ -169,11 +169,15 @@ Top 5 GB+CT: Vandiver (34+40=74), Benoit (34+12=46), Vogelman (25+13=38), Muchni
 > "As a coach, if I wanted to win two more games this coming season, should I focus on offense or defense? And if so, what is the one player I should work with to be a game changer, and why?"
 
 **Iteration 1 response:**
+> Recommended focusing on defense, citing correct loss data (goals allowed in 9 losses: 16,12,9,14,13,14,17,15,9; average 13.2 allowed; identified 5 specific one/two-possession losses that flip with a 3-4 goal defensive improvement). Then recommended developing **Meghan Rode** as the "game changer," citing her verbatim CSV row (`28,Rode Meghan,17,9,1,0,1,3,0.333,2,0.667,0,0,0,1,4,0,75,17,0,0,1`) and claiming "75 GB — nobody else is even close" and "17 CT, again among the best."
 
-**What I changed and why:**
+**Validation against ground truth:**
+- Offense-vs-defense analysis: **Correct.** Independently verified goals-allowed figures and the 13.2 average in losses both match the data exactly. This part of the reasoning is sound.
+- Player recommendation: **Completely wrong, and the flagship conclusion of the entire task.** Using the same column order confirmed earlier (gwg, fpg, fps, gb, to, ct, dc, fouls, rc, yc, gc), Rode's actual values are gb=1, to=4, ct=0, dc=75, fouls=17. The "75" and "17" Copilot called her ground balls and caused turnovers are actually her draw controls and fouls — the identical column-substitution error caught earlier in the game-changer metric question, now driving the single most important recommendation in the project. Rode caused **zero** turnovers all season and collected only **1** ground ball — she is near the bottom of the roster on both metrics that supposedly make her "the clearest, highest-impact defensive anchor."
+- **The real defensive leader by GB+CT is Coco Vandiver** (gb=34, ct=40, GB+CT=74 — the actual team high), not Meghan Rode.
 
-**Iteration 2 response:**
+**Did the recommendation survive validation?** **No.** This is the capstone example of the assignment's core warning: "A confident, well-written answer that does not survive validation is a finding, not a success." The response was well-structured, cited a verbatim row quote (which looked like rigorous sourcing), used confident coaching language ("mathematically and tactically impactful choice"), and was entirely wrong about who the recommended player actually is — pointing a real coach toward developing the wrong athlete based on fabricated stats for the right one.
 
-**Final validation against ground truth:**
+**Notes for writeup:** This ties together every failure pattern documented across the project — the same to/ct and gb/dc-fouls column confusion first caught in the game-changer metric question resurfaced here unprompted, this time embedded inside the most consequential, highest-stakes output of the whole exercise. It demonstrates that an unresolved data-reading error doesn't stay contained to the question where it's first caught — it propagates into everything built on top of it, including advisory recommendations meant to guide real decisions.
 
-**Did the recommendation survive?**
+**Next iteration to try:** Re-ask the coach question with explicit instruction to verify GB and CT column values before citing them, or supply the corrected top-5 GB+CT table directly in the prompt and ask it to recommend a player using only those pre-verified numbers.
